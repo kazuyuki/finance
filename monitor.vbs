@@ -9,7 +9,7 @@ INTERVAL = 1000
 ' 監視 & 表示
 '===============================================================================
 dim ie,  cur, pre
-AttachIE ie
+Set ie = AttachIE()
 
 cur = 0
 pre = 0
@@ -25,8 +25,8 @@ While True
 		ie.Refresh
 		waitIE ie
 	end if
+	WScript.StdOut.Write Now & vbTab & cur & vbCrLf
 	if pre <> cur then
-		WScript.StdOut.Write Now & vbTab & cur & vbCrLf
 		WScript.StdErr.Write Now & vbTab & cur & vbCrLf
 	else 
 		WScript.StdErr.Write Now & vbTab & cur & vbCr
@@ -39,26 +39,28 @@ WScript.Quit
 '===============================================================================
 ' IE Window があれば attach なければ open
 '===============================================================================
-Sub AttachIE (objIE)
-	dim flag, sa
+Function AttachIE ()
+	dim flag, sa, objIE
 	flag = 0
 	set sa = CreateObject("Shell.Application")
-	for each objIE In sa.Windows
-		if TypeName(objIE.Document) = "HTMLDocument" then
-			if objIE.Document.Title = TITLE then
+	For Each objIE In sa.Windows
+		if TypeName(objIE.document) = "HTMLDocument" then
+			if objIE.document.Title = TITLE then
 				flag = 1
 				exit for
 			end if
 		end if
-	next
+	Next
 	if flag = 0 then
 		set objIE = CreateObject("InternetExplorer.Application")
 		objIE.Visible = True
 		objIE.Navigate2 URL
+		objIE.Quit
+		set objIE = nothing
 		set objIE = sa.Windows.Item(sa.Windows.Count - 1)
-		waitIE objIE
 	end if
-End Sub
+	set AttachIE = objIE
+End Function
 
 '===============================================================================
 ' Market Close なら寝る
@@ -92,7 +94,6 @@ Sub waitIE(objIE)
 		WScript.Sleep 100
 	Wend
 End Sub
-
 
 '===============================================================================
 ' TODO
