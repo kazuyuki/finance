@@ -8,7 +8,7 @@ INTERVAL = 1000
 '===============================================================================
 ' 監視 & 表示
 '===============================================================================
-dim ie,  cur, pre
+dim ie,  cur, pre, elm
 Set ie = AttachIE()
 
 cur = 0
@@ -19,13 +19,21 @@ While True
 	waitIE ie
 
 	' On Error Resume Next
-	cur = ie.Document.getElementsByTagName("TD")(1).outerText
-	if cur = "Internet Explorer ではこのページは表示できません" then
-		WScript.StdErr.WriteLine Now & vbTab & "[Internet Explorer ではこのページは表示できません] occurred"
-		ie.Refresh
-		waitIE ie
-	end if
-	WScript.StdOut.Write Now & vbTab & cur & vbCrLf
+	for each elm in ie.Document.getElementsByTagName("TD")
+		if elm.getattribute("className") = "stoksPrice" then
+			cur = elm.outerText
+			exit for
+		end if
+	next
+
+	'if cur = "Internet Explorer ではこのページは表示できません" then
+	'	WScript.StdErr.WriteLine Now & vbTab & _
+	'	"[Internet Explorer ではこのページは表示できません] occurred"
+	'	ie.Refresh
+	'	waitIE ie
+	'end if
+
+	'WScript.StdOut.Write Now & vbTab & cur & vbCrLf
 	if pre <> cur then
 		WScript.StdErr.Write Now & vbTab & cur & vbCrLf
 	else 
@@ -55,7 +63,7 @@ Function AttachIE ()
 		set objIE = CreateObject("InternetExplorer.Application")
 		objIE.Visible = True
 		objIE.Navigate2 URL
-		objIE.Quit
+		'objIE.Quit
 		set objIE = nothing
 		set objIE = sa.Windows.Item(sa.Windows.Count - 1)
 	end if
@@ -99,4 +107,9 @@ End Sub
 ' TODO
 '===============================================================================
 '以下のような出力が来たら、ブラウザをリロードする
-'2014/11/06 9:16:18      Internet Explorer ではこのページは表示できません
+' 2014/11/06 9:16:18      Internet Explorer ではこのページは表示できません
+
+'2014.11.12
+' 出力が
+' 2014/11/12 9:56:21	震度速報　2014年11月12日　9時55分　気象庁発表
+' となってしまうケースの対応
