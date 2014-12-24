@@ -18,26 +18,39 @@ While True
 	IfMarketOpen
 	waitIE ie
 
-	' On Error Resume Next
+	do
+		if ie.Document.getElementsByTagName("TD").length = 0 then
+			WScript.StdErr.WriteLine vbLf & Date & vbTab & Time & vbTab & _
+				"[D] getElementsByTagName().length = 0" & vbCrLF
+		else
+			' Just Debug
+			WScript.StdErr.WriteLine vbLf & Date & vbTab & Time & vbTab & _
+				"[D] getElementsByTagName(TD).length = [" & _
+				ie.Document.getElementsByTagName("TD").length & "]"
+			exit do
+		end if
+	loop
+
 	for each elm in ie.Document.getElementsByTagName("TD")
+
+		On Error Resume Next
+		do while IsNull(elm.outerText)
+			WScript.Sleep(100)
+		loop
+		On Error Goto 0
+
+		WScript.StdErr.WriteLine Date & vbTab & Time & vbTab & "[D]     [" & elm.outerText & "]"
 		if elm.getattribute("className") = "stoksPrice" then
 			cur = elm.outerText
 			exit for
 		end if
 	next
 
-	'if cur = "Internet Explorer ではこのページは表示できません" then
-	'	WScript.StdErr.WriteLine Now & vbTab & _
-	'	"[Internet Explorer ではこのページは表示できません] occurred"
-	'	ie.Refresh
-	'	waitIE ie
-	'end if
-
-	'WScript.StdOut.Write Now & vbTab & cur & vbCrLf
+	WScript.Echo Now & "," & cur
 	if pre <> cur then
-		WScript.StdErr.Write Now & vbTab & cur & vbCrLf
+		WScript.StdErr.Write Date & vbTab & Time & vbTab & cur & vbCrLf
 	else 
-		WScript.StdErr.Write Now & vbTab & cur & vbCr
+		WScript.StdErr.Write Date & vbTab & Time & vbTab & cur & vbCr
 	end if
 	pre = cur
 	WScript.Sleep INTERVAL
@@ -81,14 +94,14 @@ Sub IfMarketOpen()
 		if ( cur > #09:00:00# and cur < #11:30:00# ) or ( cur > #12:30:00# and cur < #15:00:00# ) then
 			if flag = 1 Then
 				flag = 0
-				WScript.StdErr.WriteLine Now & vbTab & "Wake up!!"
+				WScript.StdErr.WriteLine vbLf & Date & vbTab & Time & vbTab & "Wake up!!"
 			end if
 			exit do
 		else
 			if flag = 0 then
 				flag = 1
 			end if
-			WScript.StdErr.Write Now & vbTab & "Sleeping!!" & vbCr
+			WScript.StdErr.Write Date & vbTab & Time & vbTab & "Sleeping!!" & vbCr
 			WScript.Sleep INTERVAL
 		end if
 	loop
@@ -108,8 +121,21 @@ End Sub
 '===============================================================================
 '以下のような出力が来たら、ブラウザをリロードする
 ' 2014/11/06 9:16:18      Internet Explorer ではこのページは表示できません
+' ---------
+' 2014.11.21
+' Z:\Project\finance\l.vbs(22, 3) Microsoft VBScript 実行時エラー: 書き込みできません。: 'getattribute'
+' ---------
+' 2014.11.28
+' Z:\Project\finance>cscript /nologo l.vbs >> 20141128.tsv
+' 2014/11/28      9:21:07 369
+' Z:\Project\finance\l.vbs(21, 2) Microsoft VBScript 実行時エラー: 書き込みできません。
+' ---------
+' 2014.12.01
+' Z:\Project\finance\l.vbs(29, 4) Microsoft VBScript 実行時エラー: 書き込みできません。: 'outerText'
+' ---------
+' 2014.12.03
+' Z:\Project\finance\m.vbs(31, 4) Microsoft VBScript 実行時エラー: 書き込みできません。: 'getattribute'
+' ----------
+' 2014.12.12
+' Z:\Project\finance\n.vbs(35, 3) Microsoft VBScript 実行時エラー: 書き込みできません。: 'outerText'
 
-'2014.11.12
-' 出力が
-' 2014/11/12 9:56:21	震度速報　2014年11月12日　9時55分　気象庁発表
-' となってしまうケースの対応
